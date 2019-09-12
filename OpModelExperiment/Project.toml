@@ -1,0 +1,4 @@
+name = "OpModelExperiment"
+uuid = "2f04a421-05a6-437a-8c62-9cbe3cc25634"
+authors = ["Jose Daniel Lara <jdlara@berkeley.edu>"]
+version = "0.1.0"
