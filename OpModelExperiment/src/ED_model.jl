@@ -33,17 +33,12 @@ m = Model()
 @variable(m, pg[thermal_gen_set,time_periods_set] >= 0)
 @variable(m, pw[renewable_gen_set,time_periods_set] >= 0)
 @variable(m, rg[thermal_gen_set,time_periods_set] >= 0)
-@variable(m, ug[thermal_gen_set,time_periods_set], binary=true)
-@variable(m, vg[thermal_gen_set,time_periods_set], binary=true)
-@variable(m, wg[thermal_gen_set,time_periods_set], binary=true)
 @variable(m, 0 <= lambda_lg[g in thermal_gen_set, gen_pwl_points[g], time_periods_set] <= 1)
 
 
 @objective(m, Min,
     sum(
-        sum(cg[get_name(g),t] + (get_op_cost(g) |> get_fixed )*ug[get_name(g),t] +
-            (get_op_cost(g) |> get_startup )*vg[get_name(g),t]
-        for t in time_periods_set)
+        sum(cg[get_name(g),t] for t in time_periods_set)
     for g in thermal_generators)
 ) # (1)
 
@@ -51,34 +46,23 @@ m = Model()
 for g in thermal_generators
     name = get_name(g)
     power_output_t0 = get_activepower(g)
-    unit_on_t0 = 1.0*(power_output_t0 > 0)
     activepowerlimits = get_tech(g) |> get_activepowerlimits
-    time_minimum = get_tech(g) |> get_timelimits
     ramplimits = get_tech(g) |> get_ramplimits
     piecewise_production = get_op_cost(g) |> get_variable
 
-    if unit_on_t0 > 0
-        @constraint(m, sum( (ug[name,t]-1) for t in 1:min(time_periods, time_minimum.up - 999.0) ) == 0) # (4)
-    else
-        @constraint(m, sum( ug[name,t] for t in 1:min(time_periods, time_minimum.down - 999.0) ) == 0) # (5)
-    end
-
-    @constraint(m, ug[name,1] - unit_on_t0 == vg[name,1] - wg[name,1]) # (6)
-
-    @constraint(m, pg[name,1] + rg[name,1] - unit_on_t0*(power_output_t0 - activepowerlimits.min) <= ramplimits.up) # (8)
-    @constraint(m, unit_on_t0*(power_output_t0 - activepowerlimits.min) - pg[name,1] <= ramplimits.down) # (9)
-    @constraint(m, unit_on_t0*(power_output_t0 - activepowerlimits.min) <= unit_on_t0*(activepowerlimits.max - activepowerlimits.min) - max(0, activepowerlimits.max - ramplimits.down)*wg[name,1]) # (10)
+    @constraint(m, pg[name,1] + rg[name,1] - (power_output_t0 - activepowerlimits.min) <= ramplimits.up)
+    @constraint(m, (power_output_t0 - activepowerlimits.min) - pg[name,1] <= ramplimits.down)
 end
 
 for t in time_periods_set
 
     @constraint(m,
-        sum( pg[get_name(g),t] + g.activepowerlimits.min*ug[get_name(g),t] for g in thermal_generators) +
+        sum( pg[get_name(g),t] + g.activepowerlimits.min for g in thermal_generators) +
         sum( pw[get_name(g),t] for g in renewable_generators)
         == load_forecasts[t]
     ) # (2)
 
-    @constraint(m, sum(rg[name,t] for g in thermal_gen_set) >= reserve_time_series[t]) # (3)
+    @constraint(m, sum(rg[name,t] for g in thermal_gen_set) >= reserve_time_series[t])
 
     for g in thermal_generators
         name = get_name(g)
@@ -88,26 +72,8 @@ for t in time_periods_set
         time_minimum = get_tech(g) |> get_timelimits
         ramplimits = get_tech(g) |> get_ramplimits
 
-        if t > 1
-            @constraint(m, ug[name,t] - ug[name,t-1] == vg[name,t] - wg[name,t]) # (12)
-            @constraint(m, pg[name,t] + rg[name,t] - pg[name,t-1] <= ramplimits.up) # (19)
-            @constraint(m, pg[name,t-1] - pg[name,t] <= ramplimits.down) # (20)
-        end
-
-
-        if t >= time_minimum.up || t == time_periods
-            @constraint(m, sum( vg[name,t2] for t2 in (t-min(time_minimum.up,time_periods)+1):t) <= ug[name,t])  # (13)
-        end
-
-        if t >= time_minimum.down || t == time_periods
-            @constraint(m, sum( wg[name,t2] for t2 in (t-min(time_minimum.down,time_periods)+1):t) <= 1 - ug[name,t])  # (14)
-        end
-
-        @constraint(m, pg[name,t] + rg[name,t] <= (activepowerlimits.max - activepowerlimits.min)*ug[name,t] - max(0, (activepowerlimits.max - ramplimits.up))*vg[name,t]) # (17)
-
-        if t < time_periods
-            @constraint(m, pg[name,t] + rg[name,t] <= (activepowerlimits.max - activepowerlimits.min)*ug[name,t] - max(0, (activepowerlimits.max - ramplimits.down))*wg[name,t+1]) # (18)
-        end
+        @constraint(m, pg[name,t] + rg[name,t] <= activepowerlimits.max)
+        @constraint(m, pg[name,t] >= activepowerlimits.min)
 
         @constraint(m, pg[name,t] == sum((piecewise_production[l][1] - piecewise_production[1][1])*lambda_lg[name,l,t] for l in gen_pwl_points[g])) # (21)
         @constraint(m, cg[name,t] == sum((piecewise_production[l][2] - piecewise_production[1][2])*lambda_lg[name,l,t] for l in gen_pwl_points[g])) # (22)
@@ -129,4 +95,4 @@ end
 println("optimization")
 
 using Gurobi
-optimize!(m, with_optimizer(Gurobi.Optimizer)
+optimize!(m, with_optimizer(Gurobi.Optimizer))
