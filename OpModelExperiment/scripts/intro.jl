@@ -18,16 +18,20 @@ rts_data = PSY.PowerSystemTableData(RTS_DIR,
     100.0,joinpath(RTS_ROOT,"RTS_Data/FormattedData/SIIP/user_descriptors.yaml"))
 
 sys_DA = PSY.System(rts_data; forecast_resolution = Dates.Hour(1))
-PSY.remove_component!(sys_DA, PSY.get_component(PSY.ThermalStandard, sys_DA, "314_SYNC_COND_1"))
+for name in ["314_SYNC_COND_1", "114_SYNC_COND_1", "214_SYNC_COND_1"]
+    PSY.remove_component!(sys_DA, PSY.get_component(PSY.ThermalStandard, sys_DA, name))
+end
 sys_RT = PSY.System(rts_data; forecast_resolution = Dates.Minute(5))
-PSY.remove_component!(sys_RT, PSY.get_component(PSY.ThermalStandard, sys_RT, "314_SYNC_COND_1"))
+for name in ["314_SYNC_COND_1", "114_SYNC_COND_1", "214_SYNC_COND_1"]
+    PSY.remove_component!(sys_RT, PSY.get_component(PSY.ThermalStandard, sys_RT, name))
+end
 
 ###################Convert the data to appropiate Time Series sizes#########################
 # Makes Forecasts with 48 hour lookahead and 24 Hour interval
 PSY.split_forecasts!(sys_DA,
                 PSY.get_forecasts(PSY.Deterministic, sys_DA, Dates.DateTime("2020-01-01T00:00:00")),
                 Dates.Hour(24),
-                48)
+                24)
 
 # Makes Forecasts with 1 hour lookahead and 5 minute interval
 
