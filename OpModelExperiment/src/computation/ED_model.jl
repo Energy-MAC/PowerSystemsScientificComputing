@@ -1,6 +1,3 @@
-import JuMP
-import PowerSystems
-
 function ed_model(ed_system, optimizer, step::Int64=1)
 
     m = JuMP.Model(optimizer)

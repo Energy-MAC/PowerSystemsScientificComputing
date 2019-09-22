@@ -1,7 +1,3 @@
-import JuMP
-import PowerSystems
-import DataFrames
-import Dates
 function uc_model(uc_system, optimizer, step::Int64=1)
 
     m = JuMP.Model(optimizer)
@@ -88,7 +84,7 @@ function uc_model(uc_system, optimizer, step::Int64=1)
         # InterruptibleLoad Upper Bound
         for il in interruptible_load_forecasts
             load_value = PowerSystems.get_component(il).maxactivepower*PowerSystems.get_forecast_value(il, t)
-            set_upper_bound(pl[PowerSystems.get_forecast_component_name(il), t], load_value)
+            JuMP.set_upper_bound(pl[PowerSystems.get_forecast_component_name(il), t], load_value)
         end
 
         for reserve in PowerSystems.get_component_forecasts(PowerSystems.StaticReserve, uc_system, data_first_step)

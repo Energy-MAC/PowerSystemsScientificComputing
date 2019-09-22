@@ -1,17 +1,15 @@
-function _prepare_workspace!(base_name::String, folder::String)
+function prepare_workspace!(base_name::String, folder::String)
 
     !isdir(folder) && error("Specified folder is not valid")
 
     cd(folder)
-    global_path = joinpath(folder, "$(base_name)")
+    global_path = joinpath(folder)
     isdir(global_path) && mkpath(global_path)
     simulation_path = joinpath(global_path, "$(round(Dates.now(),Dates.Minute))-$(base_name)")
-    raw_ouput = joinpath(simulation_path, "raw_output")
+    raw_ouput = joinpath(simulation_path)
     mkpath(raw_ouput)
-    models_json_ouput = joinpath(simulation_path, "models_json")
-    mkpath(models_json_ouput)
 
-    return
+    return raw_ouput
 
 end
 
@@ -60,13 +58,11 @@ end
 
 function update_commitment_status!(ed_model, uc_model, t)
 
-    status_solutions = value.(uc_model.obj_dict[:ug])[:,t]
+    status_solutions = JuMP.value.(uc_model.obj_dict[:ug])[:,1]
     for (ix ,v) in enumerate(status_solutions)
         name = axes(status_solutions)[1][ix]
-        fix.(ed_model.obj_dict[:ug][name, :], v; force = true)
+        JuMP.fix.(ed_model.obj_dict[:ug][name, :], v; force = true)
     end
 
     return
-
 end
-
