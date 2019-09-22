@@ -1,5 +1,3 @@
-using PowerSystems
-
 function obtain_raw_data(base_dir::String, sha::String)
     data_path = joinpath(base_dir,"raw_input_data")
     ispath(data_path) && rm(data_path, recursive = true)
