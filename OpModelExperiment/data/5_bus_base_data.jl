@@ -1,15 +1,9 @@
-uc_system = System(100.0)
-
 nodes5    = [Bus(1,"nodeA", "PV", 0, 1.0, (min = 0.9, max=1.05), 230),
              Bus(2,"nodeB", "PQ", 0, 1.0, (min = 0.9, max=1.05), 230),
              Bus(3,"nodeC", "PV", 0, 1.0, (min = 0.9, max=1.05), 230),
              Bus(4,"nodeD", "REF", 0, 1.0, (min = 0.9, max=1.05), 230),
              Bus(5,"nodeE", "PV", 0, 1.0, (min = 0.9, max=1.05), 230),
             ];
-
-for b in nodes5
-    add_component!(uc_system, b)
-end
 
 branches5 = [Line("1", true, 0.0, 0.0, Arc(from=nodes5[1],to=nodes5[2]), 0.00281, 0.0281, (from=0.00356, to=0.00356), 2.0, (min = -0.7, max = 0.7)),
              Line("2", true, 0.0, 0.0, Arc(from=nodes5[1],to=nodes5[4]), 0.00304, 0.0304, (from=0.00329, to=0.00329), 2.0, (min = -0.7, max = 0.7)),
@@ -18,9 +12,6 @@ branches5 = [Line("1", true, 0.0, 0.0, Arc(from=nodes5[1],to=nodes5[2]), 0.00281
              Line("5", true, 0.0, 0.0, Arc(from=nodes5[3],to=nodes5[4]), 0.00297, 0.0297, (from=0.00337, to=0.00337), 40.530, (min = -0.7, max = 0.7)),
              Line("6", true, 0.0, 0.0, Arc(from=nodes5[4],to=nodes5[5]), 0.00297, 0.0297, (from=0.00337, to=00.00337), 2.00, (min = -0.7, max = 0.7))
 ]
-for b in branches5
-    add_component!(uc_system, b)
-end
 
 thermal_generators5_uc_testing = [ThermalStandard("Alta", true, nodes5[1], 0.52, 0.0,
            TechThermal(0.5, PowerSystems.CT, PowerSystems.NATURAL_GAS, (min=0.52, max=1.40),  (min = -0.30, max = 0.30), (up=0.5, down=0.5), (up=1.0, down=1.0)),
@@ -57,32 +48,24 @@ thermal_generators5_uc_testing = [ThermalStandard("Alta", true, nodes5[1], 0.52,
                                  (7600.733096364351, 5.24),
                                  (9828.37578065609, 6.00)  ], 0.0, 28046.0, 0.0)
            )];
-for b in thermal_generators5_uc_testing
-    add_component!(uc_system, b)
-end
+
 
 loads5 = [ PowerLoad("Bus2", true, nodes5[2], PowerSystems.ConstantPower, 2.1, 0.9861, 4.6, 0.9861),
            PowerLoad("Bus3", true, nodes5[3], PowerSystems.ConstantPower, 2.1, 0.9861, 4.6, 0.9861),
            PowerLoad("Bus4", true, nodes5[4], PowerSystems.ConstantPower, 2.1, 1.3147, 2.1, 1.3147),
         ];
 
-for b in loads5
-    add_component!(uc_system, b)
-end
-
 il = InterruptibleLoad("IloadBus4", true, nodes5[4], PowerSystems.ConstantPower, 2.10, 1.8,  3.10, 2.0,
                         TwoPartCost((0.0, 2400.0), 38046.0))
 
-add_component!(uc_system, il)
+
 
 renewable_generators5 = [RenewableDispatch("WindBusA", true, nodes5[5], 0.0, 0.0, PowerSystems.WT, 1.200, TwoPartCost(22.0, 0.0)),
                          RenewableDispatch("WindBusB", true, nodes5[4], 0.0, 0.0, PowerSystems.WT, 1.200, TwoPartCost(22.0, 0.0)),
                          RenewableDispatch("WindBusC", true, nodes5[3], 0.0, 0.0, TechRenewable(1.20, PowerSystems.WT, (min = -0.800, max = 0.800), 1.0), TwoPartCost(22.0, 0.0))];
 
-for b in renewable_generators5
-    add_component!(uc_system, b)
-end
+
 
 reserve5 = StaticReserve("Spinning", thermal_generators5_uc_testing, 1.0, 1.0)
-add_component!(uc_system, reserve5)
+
 
