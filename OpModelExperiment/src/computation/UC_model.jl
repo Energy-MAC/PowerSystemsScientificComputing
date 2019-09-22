@@ -2,17 +2,17 @@ import JuMP
 import PowerSystems
 import DataFrames
 import Dates
-function uc_model(uc_system, optimizer)
+function uc_model(uc_system, optimizer, step::Int64=1)
 
     m = JuMP.Model(optimizer)
     #Time Information
     time_periods = PowerSystems.get_forecasts_horizon(uc_system)
     time_periods_set = 1:time_periods
-    data_first_step = PowerSystems.get_forecasts_initial_time(uc_system)
+    data_first_step = PowerSystems.get_forecast_initial_times(uc_system)[step]
     minutes_per_period = Dates.Minute(PowerSystems.get_forecasts_resolution(uc_system))/Dates.Minute(1)
 
     # Thermal Generation
-    thermal_generators = PowerSystems.get_components(ThermalStandard, uc_system)
+    thermal_generators = PowerSystems.get_components(PowerSystems.ThermalStandard, uc_system)
     gen_pwl_points = Dict(PowerSystems.get_name(g) => 1:length(g.op_cost.variable) for g in thermal_generators)
     thermal_gen_names = [PowerSystems.get_name(g) for g in thermal_generators]
 
@@ -25,14 +25,14 @@ function uc_model(uc_system, optimizer)
     JuMP.@variable(m, 0 <= lambda_lg[g in thermal_gen_names, gen_pwl_points[g], time_periods_set] <= 1)
 
     # Renewable Generation
-    renewable_forecasts = PowerSystems.get_component_forecasts(RenewableDispatch, uc_system, data_first_step)
+    renewable_forecasts = PowerSystems.get_component_forecasts(PowerSystems.RenewableDispatch, uc_system, data_first_step)
     renewable_gen_names = PowerSystems.get_forecast_component_name.(renewable_forecasts)
     JuMP.@variable(m, pw[renewable_gen_names,time_periods_set] >= 0)
 
     # Loads
-    fix_load_forecasts =  PowerSystems.get_component_forecasts(PowerLoad, uc_system, data_first_step)
+    fix_load_forecasts =  PowerSystems.get_component_forecasts(PowerSystems.PowerLoad, uc_system, data_first_step)
 
-    interruptible_load_forecasts =  PowerSystems.get_component_forecasts(InterruptibleLoad, uc_system, data_first_step)
+    interruptible_load_forecasts =  PowerSystems.get_component_forecasts(PowerSystems.InterruptibleLoad, uc_system, data_first_step)
     interruptible_load_names = PowerSystems.get_forecast_component_name.(interruptible_load_forecasts)
     JuMP.@variable(m, pl[interruptible_load_names, time_periods_set] >= 0)
 
@@ -91,7 +91,7 @@ function uc_model(uc_system, optimizer)
             set_upper_bound(pl[PowerSystems.get_forecast_component_name(il), t], load_value)
         end
 
-        for reserve in PowerSystems.get_component_forecasts(StaticReserve, uc_system, data_first_step)
+        for reserve in PowerSystems.get_component_forecasts(PowerSystems.StaticReserve, uc_system, data_first_step)
             JuMP.@constraint(m, sum(rg[PowerSystems.get_name(g),t] for g in thermal_generators) >= PowerSystems.get_component(reserve).requirement*PowerSystems.get_forecast_value(reserve, t)) # (3)
         end
 
@@ -106,9 +106,9 @@ function uc_model(uc_system, optimizer)
 
 
             if t > 1
-                @constraint(m, ug[name,t] - ug[name,t-1] == vg[name,t] - wg[name,t]) # (12)
-                @constraint(m, pg[name,t] + rg[name,t] - pg[name,t-1] <= ramplimits.up*minutes_per_period) # (19)
-                @constraint(m, pg[name,t-1] - pg[name,t] <= ramplimits.down*minutes_per_period) # (20)
+                JuMP.@constraint(m, ug[name,t] - ug[name,t-1] == vg[name,t] - wg[name,t]) # (12)
+                JuMP.@constraint(m, pg[name,t] + rg[name,t] - pg[name,t-1] <= ramplimits.up*minutes_per_period) # (19)
+                JuMP.@constraint(m, pg[name,t-1] - pg[name,t] <= ramplimits.down*minutes_per_period) # (20)
             end
 
            if t >= time_minimum.up || t == time_periods
@@ -134,7 +134,7 @@ function uc_model(uc_system, optimizer)
         for rgen in renewable_forecasts
             name = PowerSystems.get_forecast_component_name(rgen)
             ub = rgen.component.tech.rating*PowerSystems.get_forecast_value(rgen,t)
-            set_upper_bound(pw[name,t], ub)
+            JuMP.set_upper_bound(pw[name,t], ub)
         end
 
     end

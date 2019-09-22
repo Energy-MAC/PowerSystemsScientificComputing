@@ -1,18 +1,18 @@
 import JuMP
 import PowerSystems
 
-function ed_model(ed_system, optimizer)
+function ed_model(ed_system, optimizer, step::Int64=1)
 
     m = JuMP.Model(optimizer)
 
     #Time Information
     time_periods = PowerSystems.get_forecasts_horizon(ed_system)
     time_periods_set = 1:time_periods
-    data_first_step = PowerSystems.get_forecasts_initial_time(ed_system)
+    data_first_step = PowerSystems.get_forecast_initial_times(uc_system)[step]
     minutes_per_period = Dates.Minute(PowerSystems.get_forecasts_resolution(ed_system))/Dates.Minute(1)
 
     # Thermal Generation
-    thermal_generators = PowerSystems.get_components(ThermalStandard, ed_system)
+    thermal_generators = PowerSystems.get_components(PowerSystems.ThermalStandard, ed_system)
     gen_pwl_points = Dict(PowerSystems.get_name(g) => 1:length(g.op_cost.variable) for g in thermal_generators)
     thermal_gen_names = [PowerSystems.get_name(g) for g in thermal_generators]
 
@@ -23,20 +23,20 @@ function ed_model(ed_system, optimizer)
     JuMP.@variable(m, 0 <= lambda_lg[g in thermal_gen_names, gen_pwl_points[g], time_periods_set] <= 1);
 
     # Renewable Generation
-    renewable_forecasts = PowerSystems.get_component_forecasts(RenewableDispatch, ed_system, data_first_step)
+    renewable_forecasts = PowerSystems.get_component_forecasts(PowerSystems.RenewableDispatch, ed_system, data_first_step)
     renewable_gen_names = PowerSystems.get_forecast_component_name.(renewable_forecasts)
     JuMP.@variable(m, pw[renewable_gen_names,time_periods_set] >= 0)
 
     # Loads
-    fix_load_forecasts =  PowerSystems.get_component_forecasts(PowerLoad, ed_system, data_first_step)
+    fix_load_forecasts =  PowerSystems.get_component_forecasts(PowerSystems.PowerLoad, ed_system, data_first_step)
 
-    interruptible_load_forecasts =  PowerSystems.get_component_forecasts(InterruptibleLoad, ed_system, data_first_step)
+    interruptible_load_forecasts =  PowerSystems.get_component_forecasts(PowerSystems.InterruptibleLoad, ed_system, data_first_step)
     interruptible_load_names = PowerSystems.get_forecast_component_name.(interruptible_load_forecasts)
     JuMP.@variable(m, pl[interruptible_load_names, time_periods_set] >= 0)
 
     JuMP.@objective(m, Min,
     sum(
-        sum(cg[PowerSystems.get_name(g),t] + (PowerSystems.get_op_cost(g) |> get_fixed )*ug[PowerSystems.get_name(g),t] for g in thermal_generators)
+        sum(cg[PowerSystems.get_name(g),t] + (PowerSystems.get_op_cost(g) |> PowerSystems.get_fixed )*ug[PowerSystems.get_name(g),t] for g in thermal_generators)
        - sum(PowerSystems.get_component(il).op_cost.variable.cost[2]*pl[PowerSystems.get_forecast_component_name(il), t] for il in interruptible_load_forecasts)
        - sum(pw[PowerSystems.get_forecast_component_name(ren), t] for ren in renewable_forecasts)
         for t in time_periods_set)
@@ -47,9 +47,9 @@ function ed_model(ed_system, optimizer)
         name = PowerSystems.get_name(g)
         power_output_t0 = PowerSystems.get_activepower(g)
         unit_on_t0 = 1.0*(power_output_t0 > 0)
-        activepowerlimits = PowerSystems.get_tech(g) |> get_activepowerlimits
-        time_minimum = PowerSystems.get_tech(g) |> get_timelimits
-        ramplimits = PowerSystems.get_tech(g) |> get_ramplimits
+        activepowerlimits = PowerSystems.get_tech(g) |> PowerSystems.get_activepowerlimits
+        time_minimum = PowerSystems.get_tech(g) |> PowerSystems.get_timelimits
+        ramplimits = PowerSystems.get_tech(g) |> PowerSystems.get_ramplimits
 
         # Ramp Constraints
         JuMP.@constraint(m, pg[name,1] + rg[name,1] - unit_on_t0*(power_output_t0 - activepowerlimits.min) <= ramplimits.up*minutes_per_period)
@@ -71,11 +71,11 @@ function ed_model(ed_system, optimizer)
         )
 
         for il in interruptible_load_forecasts
-            load_value = PowerSystems.get_component(il).maxactivepower*get_forecast_value(il, t)
-            JuMP.set_upper_bound(pl[get_forecast_component_name(il), t], load_value)
+            load_value = PowerSystems.get_component(il).maxactivepower*PowerSystems.get_forecast_value(il, t)
+            JuMP.set_upper_bound(pl[PowerSystems.get_forecast_component_name(il), t], load_value)
         end
 
-        for reserve in PowerSystems.get_component_forecasts(StaticReserve, ed_system, data_first_step)
+        for reserve in PowerSystems.get_component_forecasts(PowerSystems.StaticReserve, ed_system, data_first_step)
             JuMP.@constraint(m, sum(rg[name,t] for name in thermal_gen_names) >= PowerSystems.get_component(reserve).requirement*PowerSystems.get_forecast_value(reserve, t)) # (3)
         end
 
@@ -83,14 +83,14 @@ function ed_model(ed_system, optimizer)
             name = PowerSystems.get_name(g)
             power_output_t0 = PowerSystems.get_activepower(g)
             unit_on_t0 = 1.0*(power_output_t0 > 0)
-            activepowerlimits = PowerSystems.get_tech(g) |> get_activepowerlimits
-            time_minimum = PowerSystems.get_tech(g) |> get_timelimits
-            ramplimits = PowerSystems.get_tech(g) |> get_ramplimits
-            piecewise_production = PowerSystems.get_op_cost(g) |> get_variable
+            activepowerlimits = PowerSystems.get_tech(g) |> PowerSystems.get_activepowerlimits
+            time_minimum = PowerSystems.get_tech(g) |> PowerSystems.get_timelimits
+            ramplimits = PowerSystems.get_tech(g) |> PowerSystems.get_ramplimits
+            piecewise_production = PowerSystems.get_op_cost(g) |> PowerSystems.get_variable
 
             if t > 1
-                @constraint(m, pg[name,t] + rg[name,t] - pg[name,t-1] <= ramplimits.up*minutes_per_period) # (19)
-                @constraint(m, pg[name,t-1] - pg[name,t] <= ramplimits.down*minutes_per_period) # (20)
+                JuMP.@constraint(m, pg[name,t] + rg[name,t] - pg[name,t-1] <= ramplimits.up*minutes_per_period) # (19)
+                JuMP.@constraint(m, pg[name,t-1] - pg[name,t] <= ramplimits.down*minutes_per_period) # (20)
             end
 
             JuMP.@constraint(m, pg[name,t] + rg[name,t] <= (activepowerlimits.max - activepowerlimits.min)*ug[name,t])
