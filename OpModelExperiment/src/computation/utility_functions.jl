@@ -67,5 +67,6 @@ function update_commitment_status!(ed_model, uc_model, t)
     end
 
     return
+
 end
 
