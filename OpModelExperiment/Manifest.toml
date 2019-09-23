@@ -51,6 +51,12 @@ git-tree-sha1 = "5f4400b24adb1fbed17a9dcc1e8ab8aaf5b03d1f"
 uuid = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 version = "0.6.0"
 
+[[Cbc]]
+deps = ["BinaryProvider", "Libdl", "MathOptInterface", "MathProgBase", "SparseArrays", "Test"]
+git-tree-sha1 = "323f67d761515264966140f673fff0f7368bc3ec"
+uuid = "9961bab8-2fa3-5c5a-9d89-47fab24efd76"
+version = "0.6.4"
+
 [[Codecs]]
 deps = ["Test"]
 git-tree-sha1 = "70885e5e038cba1c4c17a84ad6c40756e10a4fb5"
@@ -140,10 +146,10 @@ uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 version = "1.0.7"
 
 [[FlatBuffers]]
-deps = ["Parameters", "Pkg", "Test"]
-git-tree-sha1 = "dd5c2460639eef7962178216fd150c60fa42a1c4"
+deps = ["Parameters", "Test"]
+git-tree-sha1 = "8582924ac52011d08da9cf1e67f13a71dbbc2594"
 uuid = "53afe959-3a16-52fa-a8da-cf864710bae9"
-version = "0.5.3"
+version = "0.5.4"
 
 [[ForwardDiff]]
 deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "InteractiveUtils", "LinearAlgebra", "NaNMath", "Random", "SparseArrays", "SpecialFunctions", "StaticArrays", "Test"]
@@ -217,6 +223,12 @@ git-tree-sha1 = "2880e4eca97edb87ea53e986880de6bc2fbcefb1"
 uuid = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 version = "0.9.3"
 
+[[MathProgBase]]
+deps = ["Compat"]
+git-tree-sha1 = "3bf2e534e635df810e5f4b4f1a8b6de9004a0d53"
+uuid = "fdba3010-5040-5b88-9595-932c9decdf73"
+version = "0.7.7"
+
 [[Missings]]
 git-tree-sha1 = "29858ce6c8ae629cf2d733bffa329619a1c843d0"
 uuid = "e1d29d7a-bbdc-5cf2-9ac0-f12de2c33e28"
@@ -272,9 +284,9 @@ version = "0.5.2"
 
 [[PowerSystems]]
 deps = ["CSV", "DataFrames", "Dates", "InfrastructureSystems", "InteractiveUtils", "JSON", "JSON2", "LinearAlgebra", "Logging", "SparseArrays", "TimeSeries", "UUIDs", "YAML"]
-git-tree-sha1 = "8e62bcc6ce9f5baceb3df86401c8cc88ba862e25"
+git-tree-sha1 = "448657ccd49512db418db224af3cffada9a4def2"
 uuid = "bcd98974-b02a-5e2f-9ee0-a103f5c450dd"
-version = "0.4.0"
+version = "0.4.1"
 
 [[Printf]]
 deps = ["Unicode"]
