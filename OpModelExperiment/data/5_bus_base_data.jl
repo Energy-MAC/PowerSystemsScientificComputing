@@ -13,19 +13,19 @@ branches5 = [Line("1", true, 0.0, 0.0, Arc(from=nodes5[1],to=nodes5[2]), 0.00281
              Line("6", true, 0.0, 0.0, Arc(from=nodes5[4],to=nodes5[5]), 0.00297, 0.0297, (from=0.00337, to=00.00337), 2.00, (min = -0.7, max = 0.7))
 ]
 
-thermal_generators5_uc_testing = [ThermalStandard("Alta", true, nodes5[1], 0.52, 0.0,
+thermal_generators5_uc_testing = [ThermalStandard("Alta", true, nodes5[1], 0.0, 0.0,
            TechThermal(0.5, PowerSystems.CT, PowerSystems.NATURAL_GAS, (min=0.52, max=1.40),  (min = -0.30, max = 0.30), (up=0.5, down=0.5), (up=1.0, down=1.0)),
-           ThreePartCost([ (1122.4347750000002, 0.52),
-                                 (1317.43201358, 0.73),
-                                 (1642.4891244200003, 0.94),
-                                 (2775.88432216, 1.4)], 0.0, 5665.23, 0.)
+           ThreePartCost([ (7122.4347750000002, 0.52),
+                                 (7317.43201358, 0.73),
+                                 (7642.4891244200003, 0.94),
+                                 (8775.88432216, 1.4)], 0.0, 5665.23, 0.)
            ),
-           ThermalStandard("Park City", true, nodes5[1], 0.52, 0.0,
+           ThermalStandard("Park City", true, nodes5[1], 0.0, 0.0,
                TechThermal(2.2125, PowerSystems.CT, PowerSystems.NATURAL_GAS, (min=0.52, max=1.70), (min =-1.275, max=1.275), (up=0.5, down=0.5), (up=1.0, down=1.0)),
-               ThreePartCost([(1141.9330705200002, 0.52)
-                             (1348.7746684400001, 0.83)
-                             (1670.1972285800002, 1.04)
-                             (3260.4196955, 1.7)], 0.0, 5665.23, 0.0)
+               ThreePartCost([(7141.9330705200002, 0.52)
+                             (7348.7746684400001, 0.83)
+                             (7670.1972285800002, 1.04)
+                             (9260.4196955, 1.7)], 0.0, 5665.23, 0.0)
            ),
            ThermalStandard("Solitude", true, nodes5[3], 0.0, 0.00,
                TechThermal(5.20, PowerSystems.CC, PowerSystems.NATURAL_GAS, (min=2.7, max=5.20), (min =-3.90, max=3.90), (up=0.015, down=0.015), (up=5.0, down=3.0)),
@@ -34,14 +34,14 @@ thermal_generators5_uc_testing = [ThermalStandard("Alta", true, nodes5[1], 0.52,
                              (8374.484237754725, 4.93),
                              (9331.01276343956, 5.20)], 0.0, 28046.0, 0.0)
            ),
-           ThermalStandard("Sundance", true, nodes5[4], 0.9237, 0.00,
+           ThermalStandard("Sundance", true, nodes5[4], 0.0, 0.00,
                TechThermal(2.5, PowerSystems.ST, PowerSystems.COAL, (min=0.92, max=2.0), (min =-1.5, max=1.5), (up=0.025, down=0.025), (up=2.0, down=1.0)),
-               ThreePartCost([(1437.4159564599997, 0.92),
-                             (2039.7361012499996, 1.43),
-                             (2751.7596430999997, 1.74),
-                             (3775.854616729999, 2.0) ], 0.0, 11172.0, 0.0)
+               ThreePartCost([(5437.4159564599997, 0.92),
+                             (6039.7361012499996, 1.43),
+                             (6751.7596430999997, 1.74),
+                             (7775.854616729999, 2.0) ], 0.0, 11172.0, 0.0)
            ),
-           ThermalStandard("Brighton", true, nodes5[5], 0.0, 0.0,
+           ThermalStandard("Brighton", true, nodes5[5], 3.7, 0.0,
                TechThermal(7.5, PowerSystems.CC, PowerSystems.NATURAL_GAS, (min=3.7, max=6.0), (min =-4.50, max=4.50), (up=0.015, down=0.015), (up=5.0, down=3.0)),
                ThreePartCost([(4551.118299650451, 3.7),
                                  (5577.404111319302, 4.32),
@@ -67,5 +67,3 @@ renewable_generators5 = [RenewableDispatch("WindBusA", true, nodes5[5], 0.0, 0.0
 
 
 reserve5 = StaticReserve("Spinning", thermal_generators5_uc_testing, 1.0, 1.0)
-
-
