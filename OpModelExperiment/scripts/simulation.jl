@@ -31,17 +31,20 @@ ed_simulation_steps = 5
 
 include(joinpath(DrWatson.srcdir(), "computation/utility_functions.jl"))
 ic = make_initial_conditions_from_data(uc_system);
+
+hour = 1
 for day in 1:uc_simulation_steps
     println(day)
     uc_m = uc_model(uc_system, optimizer, ic, day)
     JuMP.optimize!(uc_m)
     @show JuMP.value.(uc_m[:ug])
-    for hour in 1:ed_simulation_steps
+    for run in 1:ed_simulation_steps
         println(hour)
         ed_m = ed_model(ed_system, optimizer, hour)
         update_commitment_status!(ed_m, uc_m, hour)
         JuMP.optimize!(ed_m)
         update_initial_conditions!(ic, uc_m, ed_m, hour)
+        hour += 1
     end
 end
 
