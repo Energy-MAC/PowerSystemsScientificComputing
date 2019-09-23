@@ -1,4 +1,4 @@
-function uc_model(uc_system, optimizer, step::Int64=1)
+function uc_model(uc_system, optimizer, initial_conditions::Dict=Dict{String, Any}(), step::Int64=1)
 
     m = JuMP.Model(optimizer)
     #Time Information
@@ -46,17 +46,20 @@ function uc_model(uc_system, optimizer, step::Int64=1)
    # Constraints for first time period that require initial conditions
     for g in thermal_generators
         name = PowerSystems.get_name(g)
-        power_output_t0 = PowerSystems.get_activepower(g)
-        unit_on_t0 = 1.0*(power_output_t0 > 0)
+        gen_ini_cond = get(initial_conditions, name, Dict{Symbol, Any}())
+        power_output_t0 = get(gen_ini_cond, :power_output_t0, PowerSystems.get_activepower(g))
+        unit_on_t0 = get(initial_conditions, :unit_on_t0, 1.0*(power_output_t0 > 0))
+        time_down_t0 = get(initial_conditions, :time_down_t0, 999.0*(1.0 - (power_output_t0 > 0)))
+        time_up_t0 = get(initial_conditions, :time_up_t0, 999.0*(power_output_t0 > 0))
         activepowerlimits = PowerSystems.get_tech(g) |> PowerSystems.get_activepowerlimits
         time_minimum = PowerSystems.get_tech(g) |> PowerSystems.get_timelimits
         ramplimits = PowerSystems.get_tech(g) |> PowerSystems.get_ramplimits
 
         #Commitment Constraints
         if unit_on_t0 > 0
-            JuMP.@constraint(m, sum( (ug[name,t]-1) for t in 1:min(time_periods, time_minimum.up - 999.0) ) == 0)
+            JuMP.@constraint(m, sum( (ug[name,t]-1) for t in 1:min(time_periods, time_minimum.up - time_up_t0) ) == 0)
         else
-           JuMP.@constraint(m, sum( ug[name,t] for t in 1:min(time_periods, time_minimum.down - 999.0) ) == 0)
+           JuMP.@constraint(m, sum( ug[name,t] for t in 1:min(time_periods, time_minimum.down - time_down_t0) ) == 0)
         end
 
         JuMP.@constraint(m, ug[name,1] - unit_on_t0 == vg[name,1] - wg[name,1])
