@@ -13,3 +13,11 @@ function remove_forecasts_by_type!(system::PowerSystems.System, ::Type{T}) where
 
     return
 end
+
+function explore_cost_functions(sys::PSY.System)
+    p = plot(legend = :bottomright)
+    for t in PowerSystems.get_components(PowerSystems.ThermalStandard, sys)
+        plot!([x[2] for x in t.op_cost.variable.cost], [x[1] for x in t.op_cost.variable.cost], label = t.name)
+    end
+    return(p)
+end
