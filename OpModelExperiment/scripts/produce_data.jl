@@ -120,7 +120,7 @@ add_component!(suc_system, reserve5)
 
 PowerSystems.add_forecasts!(suc_system, scenario_forecasts)
 
-to_json(uc_system, joinpath(base_dir,"suc_system.json"))
+to_json(suc_system, joinpath(base_dir,"suc_system.json"))
 
 ################################# Generate ED System Data ##################################
 
