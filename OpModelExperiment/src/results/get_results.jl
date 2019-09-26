@@ -13,7 +13,7 @@ function _result_dataframe_vars(variable::JuMP.Containers.DenseAxisArray)
 end
 
 function _result_dataframe_vars(variable::JuMP.Containers.SparseAxisArray)
-    return JuMP.value.(m[:lambda_lg])
+    return Vector()
 end
 
 function get_model_result(m::JuMP.Model)
@@ -28,7 +28,7 @@ function get_model_result(m::JuMP.Model)
 
 end
 
-function get_optimizer_log(JuMPmodel::JuMP.model)
+function get_optimizer_log(JuMPmodel::JuMP.Model)
 
     optimizer_log = Dict{Symbol, Any}()
 
@@ -45,4 +45,3 @@ function get_optimizer_log(JuMPmodel::JuMP.model)
     end
     return optimizer_log
 end
-
