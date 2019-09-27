@@ -5,7 +5,7 @@ function ed_model(ed_system, optimizer, step::Int64=1)
     #Time Information
     time_periods = PowerSystems.get_forecasts_horizon(ed_system)
     time_periods_set = 1:time_periods
-    data_first_step = PowerSystems.get_forecast_initial_times(uc_system)[step]
+    data_first_step = PowerSystems.get_forecast_initial_times(ed_system)[step]
     minutes_per_period = Dates.Minute(PowerSystems.get_forecasts_resolution(ed_system))/Dates.Minute(1)
 
     # Thermal Generation
@@ -16,7 +16,7 @@ function ed_model(ed_system, optimizer, step::Int64=1)
     JuMP.@variable(m, cg[thermal_gen_names,time_periods_set])
     JuMP.@variable(m, pg[thermal_gen_names,time_periods_set] >= 0)
     JuMP.@variable(m, rg[thermal_gen_names,time_periods_set] >= 0)
-    JuMP.@variable(m, ug[thermal_gen_names,time_periods_set]>= 0)
+    JuMP.@variable(m, ug[thermal_gen_names,time_periods_set] >= 0)
     JuMP.@variable(m, 0 <= lambda_lg[g in thermal_gen_names, gen_pwl_points[g], time_periods_set] <= 1);
 
     # Renewable Generation
@@ -49,9 +49,9 @@ function ed_model(ed_system, optimizer, step::Int64=1)
         ramplimits = PowerSystems.get_tech(g) |> PowerSystems.get_ramplimits
 
         # Ramp Constraints
-        JuMP.@constraint(m, pg[name,1] + rg[name,1] - unit_on_t0*(power_output_t0 - activepowerlimits.min) <= ramplimits.up*minutes_per_period)
+        #JuMP.@constraint(m, pg[name,1] + rg[name,1] - unit_on_t0*(power_output_t0 - activepowerlimits.min) <= ramplimits.up*minutes_per_period)
 
-        JuMP.@constraint(m, unit_on_t0*(power_output_t0 - activepowerlimits.min) - pg[name,1] <= ramplimits.down*minutes_per_period)
+        #JuMP.@constraint(m, unit_on_t0*(power_output_t0 - activepowerlimits.min) - pg[name,1] <= ramplimits.down*minutes_per_period)
 
     end
 
@@ -63,8 +63,7 @@ function ed_model(ed_system, optimizer, step::Int64=1)
         JuMP.@constraint(m,
             sum( pg[PowerSystems.get_name(g),t] + g.tech.activepowerlimits.min*ug[PowerSystems.get_name(g),t] for g in thermal_generators) +
             sum( pw[PowerSystems.get_forecast_component_name(g),t] for g in renewable_forecasts)
-            == sum(PowerSystems.get_component(load).maxactivepower*PowerSystems.get_forecast_value(load, t) for load in fix_load_forecasts) +
-            sum(pl[PowerSystems.get_forecast_component_name(l),t] for l in interruptible_load_forecasts)
+            == sum(PowerSystems.get_component(load).maxactivepower*PowerSystems.get_forecast_value(load, t) for load in fix_load_forecasts) + sum(pl[PowerSystems.get_forecast_component_name(l),t] for l in interruptible_load_forecasts)
         )
 
         for il in interruptible_load_forecasts
@@ -85,8 +84,9 @@ function ed_model(ed_system, optimizer, step::Int64=1)
             ramplimits = PowerSystems.get_tech(g) |> PowerSystems.get_ramplimits
             piecewise_production = PowerSystems.get_op_cost(g) |> PowerSystems.get_variable
 
+            #JuMP.@constraint(m, pg[name,t] + rg[name,t] - pg[name,t-1] <= ramplimits.up*minutes_per_period) # (19)
             if t > 1
-                JuMP.@constraint(m, pg[name,t] + rg[name,t] - pg[name,t-1] <= ramplimits.up*minutes_per_period) # (19)
+                JuMP.@constraint(m, pg[name,t] - pg[name,t-1] <= ramplimits.up*minutes_per_period) # (19)
                 JuMP.@constraint(m, pg[name,t-1] - pg[name,t] <= ramplimits.down*minutes_per_period) # (20)
             end
 
