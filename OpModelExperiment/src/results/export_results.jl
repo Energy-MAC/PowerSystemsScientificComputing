@@ -5,19 +5,13 @@ function write_model_results(results::Dict, save_path::String)
         @error("Specified path is not valid. Run write_results to save results.")
     end
 
-    path = remove_char("$save_path/$(round(Dates.now(),Dates.Minute))", ":")
-
-    new_folder = mkdir(path)
-    folder_path = new_folder
-
     for (k,v) in results[:vars]
-        file_path = joinpath(folder_path, "$(k).feather")
+        file_path = joinpath(save_path, "$(k).feather")
         Feather.write(file_path, v)
     end
 
-    write_optimizer_log(results.optimizer_log, folder_path)
-    #_write_time_stamps(results.time_stamp, folder_path)
-    println("Files written to $folder_path folder.")
+    write_optimizer_log(results[:optimizer_log], save_path)
+    println("Files written to $save_path folder.")
 
     return
 
