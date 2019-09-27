@@ -20,6 +20,12 @@ function solve_JuMPmodel!(JuMPmodel::JuMP.Model, save_path::String; kwargs...)
         timed_log[:sec_in_gc] = @timed JuMP.optimize!(JuMPmodel)
 
     end
+
+    model_status = JuMP.primal_status(JuMPmodel)
+    if model_status != MOI.FEASIBLE_POINT::MOI.ResultStatusCode
+        error("Status is $(model_status)")
+    end
+
     #creating the results to print to memory
     vars_result = get_model_result(JuMPmodel)
     optimizer_log = get_optimizer_log(JuMPmodel)
@@ -31,7 +37,6 @@ function solve_JuMPmodel!(JuMPmodel::JuMP.Model, save_path::String; kwargs...)
                    :obj_value => obj_value,
                    :optimizer_log => optimizer_log)
 
-    @show save_path
     write_model_results(results, save_path)
 
     return
@@ -74,7 +79,6 @@ function update_initial_conditions!(ic, uc_m, ed_m, t)
         v[:power_output_t0] = JuMP.value(pg[k, end]) + JuMP.value(ug[k, t])*v[:min_power]
         # If the unit was on, add to the count
         if v[:unit_on_t0] > 0
-            @show k, v[:unit_on_t0], JuMP.value(ug[k, t])
             if v[:unit_on_t0] == JuMP.value(ug[k, t])
                 v[:time_up_t0] += 1.0
             elseif v[:unit_on_t0] != JuMP.value(ug[k, t])
@@ -82,13 +86,11 @@ function update_initial_conditions!(ic, uc_m, ed_m, t)
                 v[:time_down_t0] = 1.0
             end
             v[:unit_on_t0] = JuMP.value(ug[k, t])
-            @show k, v
             continue
         end
 
         # If the unit was off, add to the count
         if v[:unit_on_t0] < 1
-            @show k, v[:unit_on_t0], JuMP.value(ug[k, t])
             if v[:unit_on_t0] == JuMP.value(ug[k, t])
                 v[:time_down_t0] += 1.0
             elseif v[:unit_on_t0] != JuMP.value(ug[k, t])
@@ -96,7 +98,6 @@ function update_initial_conditions!(ic, uc_m, ed_m, t)
                 v[:time_down_t0] = 0.0
             end
             v[:unit_on_t0] = JuMP.value(ug[k, t])
-            @show k, v
             continue
         end
     end
