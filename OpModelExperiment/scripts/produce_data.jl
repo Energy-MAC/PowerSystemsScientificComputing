@@ -7,6 +7,7 @@ import CSV
 import Dates
 Random.seed!(123)
 
+const PSY = PowerSystems
 include(joinpath(DrWatson.srcdir(),"data/data_download.jl"))
 include(joinpath(DrWatson.srcdir(),"data/make_scenarios.jl"))
 include(joinpath(DrWatson.srcdir(),"data/utility_functions.jl"))
@@ -53,7 +54,7 @@ total_reserves = 0.01*(reserves1[!,:Spin_Up_R1] + reserves2[!,:Spin_Up_R2] + res
 Time_stamps = Dates.DateTime.(reserves1[!,:Year],reserves1[!,:Month], reserves1[!,:Day], (reserves1[!,:Period] .- 1))
 reserves_time_array = TimeSeries.TimeArray(Time_stamps, total_reserves, [:Spinning]);
 
-add_forecast!(uc_system, reserves_time_array, reserve5, "Spinning", 1.0)
+PowerSystems.add_forecast!(uc_system, reserves_time_array, reserve5, "Spinning", 1.0)
 
 wind = CSV.read(joinpath(TimeSeries_DIR,"WIND/DAY_AHEAD_wind.csv"))
 wind[!,Symbol("309_WIND_1")] = wind[!,Symbol("309_WIND_1")]./maximum(wind[!,Symbol("309_WIND_1")])
@@ -62,11 +63,11 @@ wind[!,Symbol("303_WIND_1")] = wind[!,Symbol("303_WIND_1")]./maximum(wind[!,Symb
 wind[!,Symbol("122_WIND_1")] = wind[!,Symbol("122_WIND_1")]./maximum(wind[!,Symbol("122_WIND_1")])
 Time_stamps = Dates.DateTime.(wind[!,:Year],wind[!,:Month], wind[!,:Day], wind[!,:Period] .- 1)
 
-wind_forecast1 = Deterministic(renewable_generators5[1],"Deterministic",TimeSeries.TimeArray(Time_stamps, wind[!,Symbol("309_WIND_1")]));
-wind_forecast2 = Deterministic(renewable_generators5[2],"Deterministic",TimeSeries.TimeArray(Time_stamps, wind[!,Symbol("317_WIND_1")]));
-wind_forecast3 = Deterministic(renewable_generators5[3],"Deterministic",TimeSeries.TimeArray(Time_stamps, wind[!,Symbol("122_WIND_1")]));
+wind_forecast1 = PowerSystems.Deterministic(renewable_generators5[1],"Deterministic",TimeSeries.TimeArray(Time_stamps, wind[!,Symbol("309_WIND_1")]));
+wind_forecast2 = PowerSystems.Deterministic(renewable_generators5[2],"Deterministic",TimeSeries.TimeArray(Time_stamps, wind[!,Symbol("317_WIND_1")]));
+wind_forecast3 = PowerSystems.Deterministic(renewable_generators5[3],"Deterministic",TimeSeries.TimeArray(Time_stamps, wind[!,Symbol("122_WIND_1")]));
 wind_forecasts = [wind_forecast1, wind_forecast2, wind_forecast3]
-add_forecasts!(uc_system, wind_forecasts)
+PowerSystems.add_forecasts!(uc_system, wind_forecasts)
 
 load = CSV.read(joinpath(TimeSeries_DIR,"Load/DAY_AHEAD_regional_Load.csv"));
 load[!,Symbol("1")] = load[!,Symbol("1")]./maximum(load[!,Symbol("1")])
@@ -74,15 +75,15 @@ load[!,Symbol("2")] = load[!,Symbol("2")]./maximum(load[!,Symbol("2")])
 load[!,Symbol("3")] = load[!,Symbol("3")]./maximum(load[!,Symbol("3")])
 Time_stamps = Dates.DateTime.(load[!,:Year],load[!,:Month], load[!,:Day], load[!,:Period].- 1)
 
-load_forecast1 = Deterministic(loads5[1],"Deterministic",TimeSeries.TimeArray(Time_stamps, load[!,Symbol("1")]));
-load_forecast2 = Deterministic(loads5[2],"Deterministic",TimeSeries.TimeArray(Time_stamps, load[!,Symbol("2")]));
-load_forecast3 = Deterministic(loads5[3],"Deterministic",TimeSeries.TimeArray(Time_stamps, load[!,Symbol("3")]));
-load_forecast_interruptible = Deterministic(il, "Deterministic",TimeSeries.TimeArray(Time_stamps, load[!,Symbol("3")]));
+load_forecast1 = PowerSystems.Deterministic(loads5[1],"Deterministic",TimeSeries.TimeArray(Time_stamps, load[!,Symbol("1")]));
+load_forecast2 = PowerSystems.Deterministic(loads5[2],"Deterministic",TimeSeries.TimeArray(Time_stamps, load[!,Symbol("2")]));
+load_forecast3 = PowerSystems.Deterministic(loads5[3],"Deterministic",TimeSeries.TimeArray(Time_stamps, load[!,Symbol("3")]));
+load_forecast_interruptible = PowerSystems.Deterministic(il, "Deterministic",TimeSeries.TimeArray(Time_stamps, load[!,Symbol("3")]));
 load_forecasts = [load_forecast1, load_forecast2, load_forecast3, load_forecast_interruptible]
-add_forecasts!(uc_system, load_forecasts)
+PowerSystems.add_forecasts!(uc_system, load_forecasts)
 
-split_forecasts!(uc_system,
-                get_forecasts(Deterministic, uc_system, Dates.Dates.DateTime("2020-01-01T00:00:00")),
+PowerSystems.split_forecasts!(uc_system,
+                PowerSystems.get_forecasts(Deterministic, uc_system, Dates.Dates.DateTime("2020-01-01T00:00:00")),
                 Dates.Hour(24),
                 48)
 
@@ -118,9 +119,17 @@ end
 
 add_component!(suc_system, reserve5)
 
+PowerSystems.add_forecasts!(suc_system, load_forecasts)
+PowerSystems.add_forecast!(suc_system, reserves_time_array, reserve5, "Spinning", 1.0)
+
+PowerSystems.split_forecasts!(suc_system,
+                PowerSystems.get_forecasts(Deterministic, suc_system, Dates.Dates.DateTime("2020-01-01T00:00:00")),
+                Dates.Hour(24),
+                48)
+
 PowerSystems.add_forecasts!(suc_system, scenario_forecasts)
 
-to_json(suc_system, joinpath(base_dir,"suc_system.json"))
+PowerSystems.to_json(suc_system, joinpath(base_dir,"suc_system.json"))
 
 ################################# Generate ED System Data ##################################
 
@@ -186,7 +195,7 @@ add_forecasts!(ed_system, load_forecasts)
 
 split_forecasts!(ed_system,
                 get_forecasts(Deterministic, ed_system, Dates.Dates.DateTime("2020-01-01T00:00:00")),
-                Dates.Minute(5),
+                Dates.Hour(1),
                 12)
 
 # Write the ED System to JSON
