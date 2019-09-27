@@ -88,6 +88,7 @@ function uc_model(uc_system, optimizer, initial_conditions::Dict=Dict{String, An
         for il in interruptible_load_forecasts
             load_value = PowerSystems.get_component(il).maxactivepower*PowerSystems.get_forecast_value(il, t)
             JuMP.set_upper_bound(pl[PowerSystems.get_forecast_component_name(il), t], load_value)
+            JuMP.set_lower_bound(pl[PowerSystems.get_forecast_component_name(il), t], load_value)
         end
 
         for reserve in PowerSystems.get_component_forecasts(PowerSystems.StaticReserve, uc_system, data_first_step)
