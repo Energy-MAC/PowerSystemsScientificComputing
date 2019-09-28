@@ -1,6 +1,15 @@
 function _result_dataframe_vars(variable::JuMP.Containers.DenseAxisArray, get_function)
 
-    if length(axes(variable)) < 3
+    if length(axes(variable)) == 1
+        result = Vector{Float64}(undef, length(first(variable.axes)))
+
+        for t in variable.axes[1]
+            result[t] = get_function(variable[t])
+        end
+
+        return DataFrames.DataFrame(var = result)
+
+    elseif length(axes(variable)) < 3
 
         result = Array{Float64, 2}(undef, length(last(variable.axes)), length(first(variable.axes)))
         names = Array{Symbol, 1}(undef, length(variable.axes[1]))

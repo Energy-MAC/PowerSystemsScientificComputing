@@ -17,6 +17,8 @@ function ed_model(ed_system, optimizer, step::Int64=1)
     JuMP.@variable(m, pg[thermal_gen_names,time_periods_set] >= 0)
     JuMP.@variable(m, rg[thermal_gen_names,time_periods_set] >= 0)
     JuMP.@variable(m, ug[thermal_gen_names,time_periods_set] >= 0)
+    JuMP.@variable(m, slack_gen[time_periods_set] >= 0)
+    JuMP.@variable(m, slack_load[time_periods_set] >= 0)
     JuMP.@variable(m, 0 <= lambda_lg[g in thermal_gen_names, gen_pwl_points[g], time_periods_set] <= 1);
 
     # Renewable Generation
@@ -33,7 +35,7 @@ function ed_model(ed_system, optimizer, step::Int64=1)
 
     JuMP.@objective(m, Min,
     sum(
-        sum(cg[PowerSystems.get_name(g),t] + (PowerSystems.get_op_cost(g) |> PowerSystems.get_fixed )*ug[PowerSystems.get_name(g),t] for g in thermal_generators)
+        sum(cg[PowerSystems.get_name(g),t] + (PowerSystems.get_op_cost(g) |> PowerSystems.get_fixed )*ug[PowerSystems.get_name(g),t] for g in thermal_generators) + 1e6*(slack_gen[t] + slack_load[t])
        - sum(PowerSystems.get_component(il).op_cost.variable.cost[2]*pl[PowerSystems.get_forecast_component_name(il), t] for il in interruptible_load_forecasts)
        - sum(pw[PowerSystems.get_forecast_component_name(ren), t] for ren in renewable_forecasts)
         for t in time_periods_set)
@@ -62,8 +64,8 @@ function ed_model(ed_system, optimizer, step::Int64=1)
 
         JuMP.@constraint(m,
             sum( pg[PowerSystems.get_name(g),t] + g.tech.activepowerlimits.min*ug[PowerSystems.get_name(g),t] for g in thermal_generators) +
-            sum( pw[PowerSystems.get_forecast_component_name(g),t] for g in renewable_forecasts)
-            == sum(PowerSystems.get_component(load).maxactivepower*PowerSystems.get_forecast_value(load, t) for load in fix_load_forecasts) + sum(pl[PowerSystems.get_forecast_component_name(l),t] for l in interruptible_load_forecasts)
+            sum( pw[PowerSystems.get_forecast_component_name(g),t] for g in renewable_forecasts) + slack_gen[t]
+            == sum(PowerSystems.get_component(load).maxactivepower*PowerSystems.get_forecast_value(load, t) for load in fix_load_forecasts) + sum(pl[PowerSystems.get_forecast_component_name(l),t] for l in interruptible_load_forecasts) + slack_load[t]
         )
 
         for il in interruptible_load_forecasts
