@@ -9,7 +9,7 @@ function _result_dataframe_vars(variable::JuMP.Containers.DenseAxisArray, get_fu
 
         return DataFrames.DataFrame(var = result)
 
-    elseif length(axes(variable)) < 3
+    elseif length(axes(variable)) == 2
 
         result = Array{Float64, 2}(undef, length(last(variable.axes)), length(first(variable.axes)))
         names = Array{Symbol, 1}(undef, length(variable.axes[1]))
@@ -39,6 +39,9 @@ function _result_dataframe_vars(variable::JuMP.Containers.DenseAxisArray, get_fu
         end
 
         return DataFrames.names!(result_df, names)
+
+    else
+        error("Dimension Number $(length(axes(variable))) not Supported")
 
     end
 
