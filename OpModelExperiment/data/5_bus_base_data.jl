@@ -18,35 +18,35 @@ thermal_generators5_uc_testing = [ThermalStandard("Alta", true, nodes5[1], 0.0, 
            ThreePartCost([ (7122.4347750000002, 0.52),
                                  (7317.43201358, 0.73),
                                  (7642.4891244200003, 0.94),
-                                 (8775.88432216, 1.4)], 0.0, 5665.23, 0.)
+                                 (8775.88432216, 1.4)], 7122.4347750000002, 5665.23, 0.)
            ),
            ThermalStandard("Park City", true, nodes5[1], 0.0, 0.0,
                TechThermal(2.2125, PowerSystems.CT, PowerSystems.NATURAL_GAS, (min=0.52, max=1.70), (min =-1.275, max=1.275), (up=0.5, down=0.5), (up=1.0, down=1.0)),
                ThreePartCost([(7141.9330705200002, 0.52)
                              (7348.7746684400001, 0.83)
                              (7670.1972285800002, 1.04)
-                             (9260.4196955, 1.7)], 0.0, 5665.23, 0.0)
+                             (9260.4196955, 1.7)], 7141.9, 5665.23, 0.0)
            ),
            ThermalStandard("Solitude", true, nodes5[3], 0.0, 0.00,
                TechThermal(5.20, PowerSystems.CC, PowerSystems.NATURAL_GAS, (min=2.7, max=5.20), (min =-3.90, max=3.90), (up=0.015, down=0.015), (up=5.0, down=3.0)),
                ThreePartCost([(4877.567034952806, 2.7),
                              (5507.368250673228, 3.32),
                              (8374.484237754725, 4.93),
-                             (9331.01276343956, 5.20)], 0.0, 28046.0, 0.0)
+                             (9331.01276343956, 5.20)], 4877.56, 28046.0, 0.0)
            ),
            ThermalStandard("Sundance", true, nodes5[4], 0.0, 0.00,
                TechThermal(2.5, PowerSystems.ST, PowerSystems.COAL, (min=0.92, max=2.0), (min =-1.5, max=1.5), (up=0.025, down=0.025), (up=2.0, down=1.0)),
                ThreePartCost([(5437.4159564599997, 0.92),
                              (6039.7361012499996, 1.43),
                              (6751.7596430999997, 1.74),
-                             (7775.854616729999, 2.0) ], 0.0, 11172.0, 0.0)
+                             (7775.854616729999, 2.0) ], 5437.4, 11172.0, 0.0)
            ),
            ThermalStandard("Brighton", true, nodes5[5], 3.7, 0.0,
                TechThermal(7.5, PowerSystems.CC, PowerSystems.NATURAL_GAS, (min=3.7, max=6.0), (min =-4.50, max=4.50), (up=0.015, down=0.015), (up=5.0, down=3.0)),
                ThreePartCost([(4551.118299650451, 3.7),
                                  (5577.404111319302, 4.32),
                                  (7600.733096364351, 5.24),
-                                 (9828.37578065609, 6.00)  ], 0.0, 28046.0, 0.0)
+                                 (9828.37578065609, 6.00)  ], 4551.11, 28046.0, 0.0)
            )];
 
 
