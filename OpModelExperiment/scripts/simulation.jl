@@ -2,7 +2,6 @@ import DrWatson
 import PowerSystems
 import Dates
 import JuMP
-import Cbc
 import Feather
 import DataFrames
 import Gurobi
