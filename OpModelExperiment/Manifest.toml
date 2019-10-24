@@ -57,12 +57,6 @@ git-tree-sha1 = "45101c4d0df3946acb6e9bfcfd3a8c32abbd421b"
 uuid = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 version = "0.7.1"
 
-[[Cbc]]
-deps = ["BinaryProvider", "Libdl", "MathOptInterface", "MathProgBase", "SparseArrays", "Test"]
-git-tree-sha1 = "82371d0e0f28f1608b9f668c5f9b7c255e9f8f6b"
-uuid = "9961bab8-2fa3-5c5a-9d89-47fab24efd76"
-version = "0.6.5"
-
 [[Codecs]]
 deps = ["Test"]
 git-tree-sha1 = "70885e5e038cba1c4c17a84ad6c40756e10a4fb5"
@@ -178,6 +172,12 @@ version = "0.10.3"
 [[Future]]
 deps = ["Random"]
 uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
+
+[[Gurobi]]
+deps = ["Libdl", "LinearAlgebra", "MathOptInterface", "MathProgBase", "OrderedCollections", "SparseArrays"]
+git-tree-sha1 = "c57375bf7e0834d519c34df045c4e609276dc34e"
+uuid = "2e9cd046-0924-5485-92f1-d5272153d98b"
+version = "0.7.2"
 
 [[InfrastructureSystems]]
 deps = ["CSV", "DataFrames", "Dates", "InteractiveUtils", "JSON", "JSON2", "Logging", "Mustache", "Test", "TimeSeries", "UUIDs", "YAML"]
